@@ -20,7 +20,9 @@ struct SectionModel {
 
     private(set) var items: [ItemModel]
 
-    var offsetY: CGFloat = 0
+    var offsetY: CGFloat = .zero
+    
+    var additionalOffsetY: CGFloat = .zero
 
     private unowned var collectionLayout: ChatLayoutRepresentation
 
@@ -28,27 +30,28 @@ struct SectionModel {
         return items.count
     }
 
-    var frame: CGRect {
+    var origin: CGPoint {
+        return CGPoint(x: .zero, y: offsetY + additionalOffsetY)
+    }
+    
+    var size: CGSize {
         let additionalInsets = collectionLayout.settings.additionalInsets
-        return CGRect(x: 0,
-                      y: offsetY,
-                      width: collectionLayout.visibleBounds.width - additionalInsets.left - additionalInsets.right,
-                      height: height)
+        return CGSize(width: collectionLayout.visibleBounds.width - additionalInsets.left - additionalInsets.right, height: height)
+    }
+    
+    var frame: CGRect {
+        return CGRect(origin: origin, size: size)
     }
 
-    var height: CGFloat {
+    private var height: CGFloat {
         if let footer = footer {
             return footer.frame.maxY
         } else {
             guard let lastItem = items.last else {
-                return header?.frame.maxY ?? .zero
+                return (header?.frame.maxY ?? .zero)
             }
-            return lastItem.locationHeight
+            return lastItem.frame.maxY
         }
-    }
-
-    var locationHeight: CGFloat {
-        return offsetY + height
     }
 
     init(id: UUID = UUID(),
@@ -64,7 +67,7 @@ struct SectionModel {
     }
 
     mutating func assembleLayout() {
-        var offsetY: CGFloat = 0
+        var offsetY: CGFloat = .zero
 
         if header != nil {
             header?.offsetY = 0
@@ -73,7 +76,7 @@ struct SectionModel {
 
         for rowIndex in 0..<items.count {
             items[rowIndex].offsetY = offsetY
-            offsetY += items[rowIndex].height + collectionLayout.settings.interItemSpacing
+            offsetY += items[rowIndex].frame.height + collectionLayout.settings.interItemSpacing
         }
 
         if footer != nil {
@@ -86,7 +89,7 @@ struct SectionModel {
     mutating func setAndAssemble(header: ItemModel) {
         guard let oldHeader = self.header else {
             self.header = header
-            offsetEverything(below: -1, by: header.height)
+            offsetEverything(below: -1, by: header.frame.height)
             return
         }
         #if DEBUG
@@ -95,7 +98,7 @@ struct SectionModel {
         }
         #endif
         self.header = header
-        let heightDiff = header.height - oldHeader.height
+        let heightDiff = header.frame.height - oldHeader.frame.height
         offsetEverything(below: -1, by: heightDiff)
     }
 
@@ -112,7 +115,7 @@ struct SectionModel {
         #endif
         items[index] = item
 
-        let heightDiff = item.height - oldItem.height
+        let heightDiff = item.frame.height - oldItem.frame.height
         offsetEverything(below: index, by: heightDiff)
     }
 

@@ -90,10 +90,10 @@ final class StateController {
     }
 
     func contentHeight(at state: ModelState) -> CGFloat {
-        guard let locationHeight = storage[state]?.sections.last?.locationHeight else {
-            return 0
+        guard let maxY = storage[state]?.sections.last?.frame.maxY else {
+            return .zero
         }
-        return locationHeight + layoutRepresentation.settings.additionalInsets.bottom
+        return maxY + layoutRepresentation.settings.additionalInsets.bottom
     }
 
     func layoutAttributesForElements(in rect: CGRect,
@@ -260,7 +260,7 @@ final class StateController {
             itemFrame.size.width = layoutRepresentation.layoutFrame.size.width
         }
 
-        itemFrame = itemFrame.offsetBy(dx: dx, dy: section.offsetY)
+        itemFrame = itemFrame.offsetBy(dx: dx, dy: section.frame.minY)
         if isFinal {
             itemFrame = offsetByCompensation(frame: itemFrame, at: itemPath, for: state, backward: true)
         }
@@ -812,8 +812,8 @@ final class StateController {
             }
             let section = layout(at: .afterUpdate).sections[sectionIndex]
 
-            if section.offsetY.rounded() - layoutRepresentation.settings.interSectionSpacing <= minY {
-                proposedCompensatingOffset += section.height + layoutRepresentation.settings.interSectionSpacing
+            if section.frame.minY.rounded() - layoutRepresentation.settings.interSectionSpacing <= minY {
+                proposedCompensatingOffset += section.frame.height + layoutRepresentation.settings.interSectionSpacing
             }
         case let .frameUpdate(previousFrame, newFrame):
             guard sectionIndex < layout(at: .afterUpdate).sections.count,
@@ -829,10 +829,10 @@ final class StateController {
                 return
             }
             let section = layout(at: .beforeUpdate).sections[sectionIndex]
-            if section.locationHeight.rounded() <= minY {
+            if section.frame.maxY.rounded() <= minY {
                 // Changing content offset for deleted items using `invalidateLayout(with:) causes UI glitches.
                 // So we are using targetContentOffset(forProposedContentOffset:) which is going to be called after.
-                proposedCompensatingOffset -= (section.height + layoutRepresentation.settings.interSectionSpacing)
+                proposedCompensatingOffset -= (section.frame.height + layoutRepresentation.settings.interSectionSpacing)
             }
         }
 

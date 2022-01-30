@@ -35,15 +35,7 @@ struct ItemModel {
     var alignment: ChatItemAlignment
 
     var origin: CGPoint {
-        return CGPoint(x: 0, y: offsetY)
-    }
-
-    var height: CGFloat {
-        return size.height
-    }
-
-    var locationHeight: CGFloat {
-        return offsetY + height
+        return CGPoint(x: .zero, y: offsetY)
     }
 
     var size: CGSize {

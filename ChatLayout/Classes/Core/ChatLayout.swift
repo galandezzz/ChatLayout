@@ -610,11 +610,6 @@ public final class ChatLayout: UICollectionViewLayout {
         super.invalidateLayout(with: context)
     }
 
-    /// Invalidates the current layout and triggers a layout update.
-    public override func invalidateLayout() {
-        super.invalidateLayout()
-    }
-
     /// Retrieves the content offset to use after an animated layout update or change.
     public override func targetContentOffset(forProposedContentOffset proposedContentOffset: CGPoint) -> CGPoint {
         if controller.proposedCompensatingOffset != 0,

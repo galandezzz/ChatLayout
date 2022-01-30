@@ -159,10 +159,6 @@ final class ChatViewController: UIViewController {
 
     }
 
-    override func viewWillAppear(_ animated: Bool) {
-        super.viewWillAppear(animated)
-    }
-
     override func viewDidAppear(_ animated: Bool) {
         super.viewDidAppear(animated)
         collectionView.collectionViewLayout.invalidateLayout()
@@ -472,6 +468,10 @@ extension ChatViewController: ChatControllerDelegate {
                                   completion: { _ in
                                       DispatchQueue.main.async {
                                           completion?()
+                                          let contentHeight = self.collectionView.contentSize.height
+                                          if contentHeight <= self.chatLayout.visibleBounds.height, !self.collectionView.isTracking, !self.collectionView.isDragging, !self.collectionView.isDecelerating {
+                                              self.collectionView.contentOffset.y = -self.collectionView.adjustedContentInset.top
+                                          }
                                           self.currentControllerActions.options.remove(.updatingCollection)
                                       }
                                   },

@@ -42,7 +42,7 @@ struct LayoutModel {
         for sectionIndex in 0..<sections.count {
             sectionIndexByIdentifierCache[sections[sectionIndex].id] = sectionIndex
             sections[sectionIndex].offsetY = offset
-            offset += sections[sectionIndex].height + collectionLayout.settings.interSectionSpacing
+            offset += sections[sectionIndex].frame.height + collectionLayout.settings.interSectionSpacing
             if let header = sections[sectionIndex].header {
                 itemPathByIdentifierCache[ItemUUIDKey(kind: .header, id: header.id)] = ItemPath(item: 0, section: sectionIndex)
             }
@@ -53,6 +53,9 @@ struct LayoutModel {
                 itemPathByIdentifierCache[ItemUUIDKey(kind: .footer, id: footer.id)] = ItemPath(item: 0, section: sectionIndex)
             }
         }
+        
+        updateOffsetIfNeeeded()
+        
         self.itemPathByIdentifierCache = itemPathByIdentifierCache
         self.sectionIndexByIdentifierCache = sectionIndexByIdentifierCache
     }
@@ -67,8 +70,9 @@ struct LayoutModel {
 
         let oldSection = sections[sectionIndex]
         sections[sectionIndex].setAndAssemble(header: header)
-        let heightDiff = sections[sectionIndex].height - oldSection.height
+        let heightDiff = sections[sectionIndex].frame.height - oldSection.frame.height
         offsetEverything(below: sectionIndex, by: heightDiff)
+        updateOffsetIfNeeeded()
     }
 
     mutating func setAndAssemble(item: ItemModel, sectionIndex: Int, itemIndex: Int) {
@@ -78,8 +82,9 @@ struct LayoutModel {
         }
         let oldSection = sections[sectionIndex]
         sections[sectionIndex].setAndAssemble(item: item, at: itemIndex)
-        let heightDiff = sections[sectionIndex].height - oldSection.height
+        let heightDiff = sections[sectionIndex].frame.height - oldSection.frame.height
         offsetEverything(below: sectionIndex, by: heightDiff)
+        updateOffsetIfNeeeded()
     }
 
     mutating func setAndAssemble(footer: ItemModel, sectionIndex: Int) {
@@ -89,8 +94,9 @@ struct LayoutModel {
         }
         let oldSection = sections[sectionIndex]
         sections[sectionIndex].setAndAssemble(footer: footer)
-        let heightDiff = sections[sectionIndex].height - oldSection.height
+        let heightDiff = sections[sectionIndex].frame.height - oldSection.frame.height
         offsetEverything(below: sectionIndex, by: heightDiff)
+        updateOffsetIfNeeeded()
     }
 
     func sectionIndex(by sectionId: UUID) -> Int? {
@@ -133,6 +139,17 @@ struct LayoutModel {
             for index in (index + 1)..<sections.count {
                 sections[index].offsetY += heightDiff
             }
+        }
+    }
+    
+    private mutating func updateOffsetIfNeeeded() {
+        guard let section = sections.last else { return }
+        
+        let contentHeight = section.frame.maxY - section.additionalOffsetY + collectionLayout.settings.additionalInsets.bottom
+        let topOffset = collectionLayout.visibleBounds.height - contentHeight
+        
+        for sectionIndex in 0..<sections.count {
+            sections[sectionIndex].additionalOffsetY = max(topOffset, .zero)
         }
     }
 
